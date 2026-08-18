@@ -126,12 +126,3 @@ Tested on `transformers` 5.x. Two v5 changes affect this notebook:
 After `pip install -U`, restart the runtime. `pip` replaces files on disk but
 cannot evict modules already resident in `sys.modules`.
 
-## Running it
-
-```
-Colab → File → Upload notebook → lora_qlora_memory_benchmark.ipynb
-Runtime → Change runtime type → T4 GPU
-```
-
-Run cells individually rather than Run All; the install cell requires a restart
-before the rest will import correctly.
