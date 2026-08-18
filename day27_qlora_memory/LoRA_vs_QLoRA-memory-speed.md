@@ -135,11 +135,3 @@ Runtime → Change runtime type → T4 GPU
 
 Run cells individually rather than Run All; the install cell requires a restart
 before the rest will import correctly.
-
-## AI assistance
-
-This notebook was written with AI assistance for the experimental scaffolding and
-prose. The design decisions above — the fp32 baseline, disabling gradient
-checkpointing, and measuring after a step rather than after loading — are choices
-I can defend and did not accept without checking. Every number in the results
-table came from running the code on my own hardware.
