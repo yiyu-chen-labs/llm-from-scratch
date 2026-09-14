@@ -1,0 +1,65 @@
+# =============================================================
+# Sakana AI 專案 — Mac (Apple Silicon M5 / 16GB) 本機開發環境
+# =============================================================
+# 用法：
+#   1. 安裝 uv:  brew install uv   (或參考 uv 官方文件)
+#   2. 在專案資料夾放這個檔，然後：
+#        uv venv                # 建虛擬環境
+#        uv sync                # 依此檔安裝 + 產生 uv.lock（真正的版本鎖在這裡）
+#   3. 只裝開發工具群組:  uv sync --extra dev
+#
+# 版本策略：這裡只寫「下限」(>=)。真正的精確版本由 `uv sync` / `uv lock`
+#           在你的機器上解析後寫進 uv.lock —— 那份才是可重現的鎖定版本。
+#
+# ⚠️ 刻意不放的套件（CUDA 專用，請在雲端 GPU 上另裝，別在 Mac 上裝）：
+#     vllm, bitsandbytes, auto-gptq, autoawq, flash-attn
+#     例外：llama.cpp / GGUF 在 Apple Silicon (Metal) 上跑得很好，
+#           但它不是 pip 套件，另外用 brew/原始碼裝即可。
+# =============================================================
+
+[project]
+name = "sakana-prep"
+version = "0.1.0"
+description = "Sakana AI 六個月技能養成路線圖 — 本機開發環境"
+# 3.11 是整套 ML/RAG 生態相容性最穩的甜蜜點；
+# 3.12 到 2026 年多半也 OK，想試可改成 <3.14，但遇到裝不起來就退回 3.11。
+requires-python = ">=3.11,<3.13"
+
+dependencies = [
+    # --- 核心：PyTorch + HuggingFace（Mac 上 torch 內建 MPS 支援）---
+    "torch>=2.2",
+    "transformers>=4.44",
+    "datasets>=2.20",
+    "accelerate>=0.33",
+    "huggingface_hub>=0.24",
+    "safetensors>=0.4",
+    # --- 微調相關（可裝、可跑小範例；真正訓練上雲）---
+    "peft>=0.12",
+    "trl>=0.9",
+    # --- Phase 2 RAG 套件（Mac 友善）---
+    "sentence-transformers>=3.0",
+    "faiss-cpu>=1.8",          # 注意是 cpu，不是 gpu
+    "rank-bm25>=0.2.2",
+    "ragas>=0.1.9",
+    "chromadb>=0.5",          # 簡單向量庫；用 faiss 的話可拿掉
+    # --- Agent / 結構化輸出 ---
+    "langgraph>=0.2",
+    "pydantic>=2.7",
+    "mcp<2",
+    # --- 資料處理 / 繪圖 ---
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+# 開發工具（跑 uv sync --extra dev 才裝）
+dev = [
+    "jupyter>=1.0",
+    "ipykernel>=6.29",
+    "ruff>=0.5",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
