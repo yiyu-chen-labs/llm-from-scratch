@@ -1,0 +1,109 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyMtt+eV25bGApcLG64sQw7D",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/yiyu-chen-labs/llm-from-scratch/blob/main/week9_reflection_md\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [],
+      "metadata": {
+        "id": "1Y97AOu4aGGr"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Week 9 反思 — 檢索 baseline (RAG 的 R)\n",
+        "\n",
+        "## 這週做了什麼\n",
+        "RAG 三步驟 R-A-G 中,只做了 **R (Retrieval,檢索)**:\n",
+        "- 把參考段落(passages)和問題(question)都用 embedding 模型向量化。\n",
+        "- 用 cosine similarity 算問題與每段的相似度,argsort 排序。\n",
+        "- 用 label(答案卡)評估:正解排進前 k 名的比例 = recall@k。\n",
+        "\n",
+        "A (Augmented,把段落塞進 prompt) 和 G (Generation,LLM 作答) **尚未做**\n",
+        "(需要 LLM,決定之後接 API 再做)。\n",
+        "\n",
+        "## 使用的資料與模型\n",
+        "- 資料:JQaRA (hotchpotch/JQaRA),日文 RAG 評估資料集,Wikipedia 純文字段落。\n",
+        "- 每題附約 100 個候選段落 + label(1=正解 / 0=干擾)。\n",
+        "- embedding 模型:multilingual-e5-small(384 維,支援日文)。\n",
+        "  ※ 待確認:notebook 實際用的模型名要跟這裡對齊(先前 code 曾出現\n",
+        "     paraphrase-multilingual-MiniLM,請以實際跑的為準並統一)。\n",
+        "\n",
+        "## Baseline 數字\n",
+        "| 指標 | 20 題 | 100 題 |\n",
+        "|---|---|---|\n",
+        "| recall@1 | 0.55 | (未測) |\n",
+        "| recall@5 | 0.85 | 0.89 |\n",
+        "| recall@10 | 0.85 | (未測) |\n",
+        "\n",
+        "## 關鍵觀察\n",
+        "\n",
+        "### 1. 相似 ≠ 正確(RAG 的核心限制)\n",
+        "embedding 的相似度衡量「語意相近」,不等於「這段含正解」。\n",
+        "一段文字可能跟問題語意極像(同主題、類似詞彙)卻沒有答案 ——\n",
+        "親眼看到一個干擾段落(海蛞蝓 / ウミウシ,相似度 0.690)因語意接近\n",
+        "「海の天使」而擠掉正解排第一。\n",
+        "→ 這是為什麼後續需要 re-ranking、引用忠實度/abstention。\n",
+        "\n",
+        "### 2. @1 vs @5 的落差 → 排序問題(re-ranking 的目標)\n",
+        "20 題:recall@1=0.55,但 recall@5=0.85,落差 0.30。\n",
+        "代表約 30% 的題「正解排進了前5、卻沒排到第一」。\n",
+        "→ 這是**排序問題**,不是檢索失敗 —— re-ranking 應該能修。\n",
+        "→ 可驗證的假設:re-ranking 後,recall@1 應明顯上升,recall@5 變化不大。\n",
+        "\n",
+        "### 3. @5 = @10(都 0.85)→ 檢索問題(re-ranking 救不了)\n",
+        "從 @5 到 @10 沒有增益,代表那 15% 失手的題,正解連前10都沒撈到。\n",
+        "→ 這是**檢索本身沒撈到**的問題(正解可能排在很後面),\n",
+        "   re-ranking 幫不上(它只能重排已撈到的)。需要更好的 embedding 或 hybrid 檢索(如 +BM25)。\n",
+        "\n",
+        "### 4. 樣本大小影響數字可信度\n",
+        "recall@5:20 題 = 0.85,100 題 = 0.89。\n",
+        "20 題每題佔 5%,數字會抖;100 題較穩,0.89 更接近真值。\n",
+        "→ 教訓:單一數字要標「基於幾題」,小樣本結果是雜訊,不是趨勢。\n",
+        "→ 待辦:跑 20/50/100/200 題看收斂,確認多少題才夠穩。\n",
+        "\n",
+        "## Week 9 完成度(誠實盤點)\n",
+        "- ✅ 檢索(向量化 → 相似度 → 排序 → top-k)\n",
+        "- ✅ recall@k 評估(多個 k)+ 數字診斷\n",
+        "- ⬜ 文件 ingest / 清洗 → **移到 Week 10**(JQaRA 已清好,練不到)\n",
+        "- ⬜ chunking(chunker 函式)→ **移到 Week 10**(JQaRA 段落已切好,無原料可切)\n",
+        "- ⬜ 建向量庫(FAISS,「玩法 B」從整庫檢索)→ 待做\n",
+        "- ⬜ A + G(prompt + LLM 生成)→ 待接 API\n",
+        "\n",
+        "## 下一步\n",
+        "- Week 11 概念先行:re-ranking(用 cross-encoder 重排,修「排序問題」),\n",
+        "  用 recall@1 的變化驗證效果。\n",
+        "- Week 10:找**原始日文長文件**資料集(JQaRA 給不了),做 ingest + chunking。\n",
+        "- 評估可信度:拉大題數看收斂;補齊 100 題的 @1、@10。"
+      ],
+      "metadata": {
+        "id": "ZG3WX2wyaIPH"
+      }
+    }
+  ]
+}
