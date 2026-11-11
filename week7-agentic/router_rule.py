@@ -15,7 +15,14 @@ server_params = StdioServerParameters(
 def route(query: str):
     """Rule-based routing. Cheap, predictable, brittle."""
     if "weather" in query.lower() or "天気" in query:
-        city = "Tokyo" if "tokyo" in query.lower() else "Osaka"
+        # city = "Tokyo" if "tokyo" in query.lower() else "Osaka"
+        # return "get_weather", {"city": city}
+        if "tokyo" in query.lower() or "東京" in query:
+            city = "Tokyo"
+        elif "osaka" in query.lower() or "大阪" in query:
+            city = "Osaka"
+        else:
+            city = "NONE"
         return "get_weather", {"city": city}
     if "+" in query:
         a, b = query.split("+")
