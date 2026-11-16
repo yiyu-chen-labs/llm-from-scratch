@@ -1,5 +1,4 @@
 # Week 11 Day 1：bi-encoder vs cross-encoder（re-ranking 的直覺）
-
 ## 1. bi-encoder vs cross-encoder 的資料流
 
 **bi-encoder**：會先將自己壓縮成一條向量，所以最後是 query 一個 vector、doc 一個 vector，再比較兩個向量。This is fast.
