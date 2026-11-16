@@ -112,7 +112,3 @@ Because the person who created the model says so.
 - **Run 3：用字越接近，bi-encoder 越難分**：第二份文件也有「3年未満」之後，bi 的差距從 0.147 縮到 0.064。
 - **Run 4：兩個模型都分不出「ない」**。cross-encoder 沒有做錯：問題是是非題，兩份文件都**直接在回答這個問題**，只是答案相反。reranker 判斷的是「**相關**」，不是「**正確**」。對照 Run 2：問「出ない条件は？」時，「支給される」那份沒有回答，只拿到 0.014。**同一份文件，換一個問法，相關性就不一樣。**
 - **所以矛盾的文件要靠其他階段處理**：第 10 週的 metadata（用日期判斷哪份是現行版本），以及第 12 週的引用忠實度（檢查回答是否真的被引用的文件支持）。
-
-### 面試可以講的版本
-
-> "I expected the cross-encoder to separate a negated minimal pair. It scored both at 0.999, because for a yes/no question both documents are relevant: they just answer it differently. That taught me relevance and correctness are different problems, so the reranker can't be my guard against contradictory documents. That's handled by metadata and citation-faithfulness checks downstream."
