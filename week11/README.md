@@ -1,7 +1,5 @@
 # Week 11 Day 1：bi-encoder vs cross-encoder（re-ranking 的直覺）
 
-> 標記說明：沒有標記的是我自己寫的；**** 是補充或修正的地方。
-
 ---
 
 ## 1. bi-encoder vs cross-encoder 的資料流
